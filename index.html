@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css" rel="stylesheet">
+        <style>
+            .container {
+                min-width: 992px;
+            }
+
+            .preview-wide {
+                position: relative;
+            }
+
+            .canvas-wide {
+                transform-origin: center center;
+                transform: scale(0.25);
+                position: absolute;
+                left: 50%;
+                margin-left: -960px;
+                top: 50%;
+                margin-top: -540px;
+                width: 1920px;
+                height: 1080px;
+            }
+
+            .preview-square {
+                position: relative;
+            }
+
+            .canvas-square {
+                transform-origin: center center;
+                transform: scale(0.25);
+                position: absolute;
+                left: 50%;
+                margin-left: -540px;
+                top: 50%;
+                margin-top: -540px;
+                width: 1080px;
+                height: 1080px;
+            }
+
+            .content {
+                position: absolute;
+                top: 25px;
+                left: 25px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container mx-auto h-screen flex flex-row">
+            <div class="bg-grey-lightest w-1/2 h-screen">
+                <div class="preview-wide w-full h-screen">
+                    <div class="content mx-auto">
+                        <input type="text" name="book" value="Genesis" />
+                        <input type="text" name="verses" value="28v10 – 32v2" />
+                    </div>
+                    <canvas class="canvas-wide" width="1920" height="1080"></canvas>
+                </div>
+            </div>
+            <div class="bg-grey-light w-1/2 h-screen">
+                <div class="preview-square w-full h-screen">
+                    <canvas class="canvas-square" width="1080" height="1080"></canvas>
+                </div>
+            </div>
+        </div>
+        <script>
+            var book = document.querySelector("[name='book']")
+
+            book.addEventListener('keydown', update)
+            book.addEventListener('keyup', update)
+            book.addEventListener('change', update)
+
+            var verses = document.querySelector("[name='verses']")
+
+            verses.addEventListener('keydown', update)
+            verses.addEventListener('keyup', update)
+            verses.addEventListener('change', update)
+
+            var canvasWide = document.querySelector(".canvas-wide")
+
+            canvasWide.addEventListener("click", function() {
+                downloadCanvas(canvasWide, book.value + " " + verses.value + " wide.png")
+            })
+
+            var canvasSquare = document.querySelector(".canvas-square")
+
+            canvasSquare.addEventListener("click", function() {
+                downloadCanvas(canvasSquare, book.value + " " + verses.value + " square.png")
+            })
+
+            function downloadCanvas(canvas, filename) {
+                var data = canvas.toDataURL("image/png")
+                var blob = data.replace(/^data:image\/png/, "data:application/octet-stream")
+
+                var link = document.createElement("a")
+                link.setAttribute("href", blob)
+                link.setAttribute("download", filename)
+                link.click()
+            }
+
+            function updateCanvas(canvas, bookText, versesText) {
+                var context = canvas.getContext("2d")
+
+                var data = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="${canvas.width}" height="${canvas.height}">
+                        <foreignObject width="100%" height="100%">
+                            <div xmlns="http://www.w3.org/1999/xhtml">
+                                <div style="font-family: Neuton; color: #fff; font-size: 150px; font-weight: 400; width: 100%; text-align: center; position: absolute; top: 30%;">
+                                    ${bookText}
+                                </div>
+                                <div style="font-family: 'Source Sans Pro'; color: #fff; font-size: 75px; font-weight: 300; width: 100%; text-align: center; position: absolute; top: 50%;">
+                                    ${versesText}
+                                </div>
+                            </div>
+                        </foreignObject>
+                    </svg>
+                `   
+
+                data = encodeURIComponent(data)
+
+                var image = new Image()
+
+                image.onload = function() {
+                    console.log("canvas updated")
+
+                    context.fillStyle = "#303030"
+                    context.fillRect(0, 0, canvas.width, canvas.height)
+                    context.drawImage(image, 0, 0)
+                }
+
+                image.src = "data:image/svg+xml," + data
+            }
+
+            function update() {
+                console.log("changes to fields:", book.value, verses.value)
+
+                updateCanvas(canvasWide, book.value, verses.value)
+                updateCanvas(canvasSquare, book.value, verses.value)
+            }
+
+            update()
+        </script>
+    </body>
+</html>
